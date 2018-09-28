@@ -2,6 +2,9 @@
 
   PDF="$1"
 
+  TMPDIR="."
+   TMPID="$TMPDIR/tmp"
+
   YOURLSCONFIG="../lib/yourls.config"
   SHORTURLBASE=`grep "^SHORTURLBASE" $YOURLSCONFIG | #
                 tail -n 1 | cut -d ":" -f 2-`
@@ -11,11 +14,14 @@
                 tail -n 1 | cut -d ":" -f 2-`
 
   PREVIEWSIZE="800";OPACITY="0.3"
-  COLORSET="44aa00;ff0000;003380;ffcc00;55ddff;ad60f2;ff00cc;aaffcc"
   CANVASPDF="../lib/pdf/canvas.pdf"
+  COLORSET="44aa00;ff0000;003380;ffcc00;55ddff;ad60f2;ff00cc;aaffcc;
+            44aa00;ff0000;003380;ffcc00;55ddff;ad60f2;ff00cc;aaffcc;
+            44aa00;ff0000;003380;ffcc00;55ddff;ad60f2;ff00cc;aaffcc;
+            44aa00;ff0000;003380;ffcc00;55ddff;ad60f2;ff00cc;aaffcc;"
+  COLORSET=`echo $COLORSET | sed ":a;N;\$!ba;s/\n//g" | sed 's/ //g'`
+  COLORSET=`printf "$COLORSET%.0s" {1..100}`
 
-  TMPDIR="."
-   TMPID="$TMPDIR/tmp"
   MAPTMP="$TMPID.map"
 
   OUTID=`md5sum $PDF| cut -c 1-8`
@@ -35,7 +41,9 @@
   echo "\usepackage{pdfpages}"                           >> ${TMPID}.tex
   echo "\usepackage{geometry}"                           >> ${TMPID}.tex
  #echo "\geometry{paperwidth=840pt,paperheight=590pt}"   >> ${TMPID}.tex
-  echo "\geometry{paperwidth=4200pt,paperheight=2950pt}" >> ${TMPID}.tex
+ #echo "\geometry{paperwidth=4200pt,paperheight=2950pt}" >> ${TMPID}.tex
+ #echo "\geometry{paperwidth=6300pt,paperheight=4425pt}" >> ${TMPID}.tex
+  echo "\geometry{paperwidth=8400pt,paperheight=5900pt}" >> ${TMPID}.tex
   echo "\begin{document}"                                >> ${TMPID}.tex
   echo "\includepdf[delta=10 0,scale=.95,"               >> ${TMPID}.tex
   echo "            pages=-,nup=2x1,frame=false]"        >> ${TMPID}.tex
@@ -140,48 +148,64 @@
        else MAP="NO"
       fi
     # ----------------------------------------------------------------- #
-      COLORTAKEN="XXXX";DRAW="" # RESET
+      CNT="1";COLORTAKEN="XXXX";DRAW="" # RESET
 
       for BARCODE in `echo $ZBAR          | #
                       sed 's/ //g'        | #
                       sed 's/decoded/\n/g'` #
         do
-            URL=`echo "$BARCODE"        | #
-                 cut -d "(" -f 1        | #
-                 sed 's/QRCODE//'       | # 
-                 tr [:upper:] [:lower:]`  #
-           SHORTURL=`echo $URL          | #
-                     rev                | #
-                     cut -d "/" -f 1    | #
-                     rev`                 #
-             URLID=URL`echo $SHORTURL   | #
-                       md5sum           | #
-                       sed 's/[a-f]//g' | #
-                       cut -c 1-8`ID
-  
-             XY=`echo "$BARCODE"  | #
-                 cut -d "(" -f 2- | #
-                 sed 's/)(/,/g'   | #
-                 sed 's/[()]//g'`   #  
-          CHECK=`curl -sIL $URL          | #
-                 tr -d '\015'            | #
-                 grep ^Location          | #
-                 tail -n 1               | #
-                 grep -v "$SHORTURLBASE" | #
-                 wc -c`                    #
-             COLOR=`echo $COLORSET         | #
-                    sed 's/;/\n/g'         | #
-                    egrep -v "$COLORTAKEN" | #
-                    shuf -n 1 --random-source=$0`
-             COLORTAKEN=`echo "${COLORTAKEN}|${COLOR}" | sed 's/^|//'`
-             COLORID=`echo $COLOR | base64 | sed 's/[^a-zA-Z]*//g'`
-             echo "<span class=\"$COLORID\">" >> $HTML
-  
+            URL=`echo "$BARCODE"         | #
+                 cut -d "(" -f 1         | #
+                 sed 's/QRCODE//'`         #
+
+            if [ `echo $URL | grep -i "$SHORTURLBASE" | #
+                  wc -l` -lt 1 ]
+            then
+                  echo "NOT A MATCHING SHORTURL"
+
+            fi
+
+             CHECK=`curl -sIL $URL          | #
+                    tr -d '\015'            | #
+                    grep ^Location          | #
+                    tail -n 1               | #
+                    grep -v "$SHORTURLBASE" | #
+                    wc -c`                    #
+              SHORTURL=`echo $URL           | #
+                        rev                 | #
+                        cut -d "/" -f 1     | #
+                        rev`                  #
+
+              URLID=URL`echo $SHORTURL      | #
+                        md5sum              | #
+                        sed 's/[a-f]//g'    | #
+                        cut -c 1-8`ID         #
+              THISID=`echo $RANDOM          | #
+                      md5sum | cut -c 1-8`    #
+               MAPID=`echo $THISID | rev`
+              XY=`echo "$BARCODE"           | #
+                  cut -d "(" -f 2-          | #
+                  sed 's/)(/,/g'            | #
+                  sed 's/[()]//g'`            #  
+
+              COLOR=`echo $COLORSET          | #
+                     sed 's/;/\n/g'          | #
+                     head -n $CNT | tail -n 1`
+
+              COLORID=`echo $COLOR | base64 | sed 's/[^a-zA-Z]*//g'`
+
+              echo "<span class=\"$COLORID\">" >> $HTML
+
+        
+           # ----------------------------------------------------------------- #
              if [ $CHECK -gt 1 ]; then
   
-                 echo "<span class=\"s\">"        >> $HTML
-                 echo "<a href=\"$URL\">$URL</a> already defined<br/>"  >> $HTML
-                 echo "</span>"                   >> $HTML
+                 echo "<span class=\"s\" id=\"$THISID\">"            >> $HTML
+                 echo "<a href=\"$URL\">$URL</a> "                   >> $HTML
+                 echo " already defined "                            >> $HTML
+                 echo "<a href=\"#$MAPID\">M</a><br/>"               >> $HTML
+                 echo "</span>"                                      >> $HTML
+
              else
   
              if [ `echo $ALLURLS | grep $URL | wc -l` -gt 0 ];
@@ -199,7 +223,7 @@
                   echo " name=\"action\" value=\"shorturl\">"        >> $HTML
                   echo "<input type=\"hidden\" name=\"keyword\""     >> $HTML
                   echo " value=\"$SHORTURL\">"                       >> $HTML
-                  echo "<input type=\"text\""                        >> $HTML
+                  echo "<input type=\"text\" id=\"$THISID\""         >> $HTML
                   echo "name=\"url\" placeholder=\"url\">"           >> $HTML
                   echo "<input type=\"submit\" value=\"make link\">" >> $HTML
                   echo "</form>"                                     >> $HTML
@@ -208,10 +232,13 @@
                 # echo "$URLID $IMAGEID $URL"
                   echo "$URLID $IMAGEID XX"                          >> $HTML
                   echo "<br/></span>"                                >> $HTML
+
+                  #URL="#$THISID"
               fi
              fi
              echo "<br/></span>"                                     >> $HTML
-  
+           # ----------------------------------------------------------------- #
+
              ALLURLS="$ALLURLS|$URL,$URLID,$IMAGEID"
   
            # COPY AND MARK COORDINATES
@@ -249,12 +276,13 @@
              echo "<area shape=\"poly\" 
                      coords=\"$XYNEW\" 
                      href=\"$URL\" 
-                     alt=\"test\">" | tr -s ' ' >> $MAPTMP
+                     id=\"$MAPID\">" | tr -s ' ' >> $MAPTMP
+
+           CNT=`expr $CNT + 1`
       done
   
       if [ X$MAP == XYES ]; then
            echo "</map>" >> $MAPTMP
-           #echo "</p>"   >> $HTML
       fi
   
      # ----------------------------------------------------------------- #
@@ -279,24 +307,23 @@
                     sed 's/ /_/g'     | #
                     uniq`
        do
-          URLID=`echo $URLID | sed 's/_/ /g'`
-          IMGID=`echo $URLID | cut -d " " -f 2`
-          URLID=`echo $URLID | cut -d " " -f 1`
-
-          WHERE=`echo $ALLURLS        | #
-                 sed "s,$URLID,\n&,g" | #
-                 cut -d "|" -f   1    | #
-                 grep ^$URLID         | #
-                 grep -v $IMGID       | #
-                 cut -d "," -f 2      | #
-                 sed 's/.*/<a href=\"#&\">O<\\\\\/a> /' | #
-                 sed ':a;N;$!ba;s/\n/ /g'` #
-
-          if [ `echo $WHERE | wc -c` -gt 2 ]; then
-          sed -i "/$IMGID/s/$URLID/$WHERE/g" $HTML
-          sed -i "/$WHERE/s/$IMGID//g"       $HTML
-          fi
-
+           URLID=`echo $URLID | sed 's/_/ /g'`
+           IMGID=`echo $URLID | cut -d " " -f 2`
+           URLID=`echo $URLID | cut -d " " -f 1`
+ 
+           WHERE=`echo $ALLURLS        | #
+                  sed "s,$URLID,\n&,g" | #
+                  cut -d "|" -f   1    | #
+                  grep ^$URLID         | #
+                  grep -v $IMGID       | #
+                  cut -d "," -f 2      | #
+                  sed 's/.*/<a href=\"#&\">O<\\\\\/a> /' | #
+                  sed ':a;N;$!ba;s/\n/ /g'` #
+ 
+           if [ `echo $WHERE | wc -c` -gt 2 ]; then
+           sed -i "/$IMGID/s/$URLID/$WHERE/g" $HTML
+           sed -i "/$WHERE/s/$IMGID//g"       $HTML
+           fi
       done
   done
 
