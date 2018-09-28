@@ -15,12 +15,12 @@
 
   PREVIEWSIZE="800";OPACITY="0.3"
   CANVASPDF="../lib/pdf/canvas.pdf"
-  COLORSET="44aa00;ff0000;003380;ffcc00;55ddff;ad60f2;ff00cc;aaffcc;
-            44aa00;ff0000;003380;ffcc00;55ddff;ad60f2;ff00cc;aaffcc;
-            44aa00;ff0000;003380;ffcc00;55ddff;ad60f2;ff00cc;aaffcc;
-            44aa00;ff0000;003380;ffcc00;55ddff;ad60f2;ff00cc;aaffcc;"
-  COLORSET=`echo $COLORSET | sed ":a;N;\$!ba;s/\n//g" | sed 's/ //g'`
-  COLORSET=`printf "$COLORSET%.0s" {1..100}`
+ #COLORSET="44aa00;ff0000;003380;ffcc00;55ddff;ad60f2;ff00cc;aaffcc;
+ #          44aa00;ff0000;003380;ffcc00;55ddff;ad60f2;ff00cc;aaffcc;
+ #          44aa00;ff0000;003380;ffcc00;55ddff;ad60f2;ff00cc;aaffcc;
+ #          44aa00;ff0000;003380;ffcc00;55ddff;ad60f2;ff00cc;aaffcc;"
+ #COLORSET=`echo $COLORSET | sed ":a;N;\$!ba;s/\n//g" | sed 's/ //g'`
+ #COLORSET=`printf "$COLORSET%.0s" {1..100}`
 
   MAPTMP="$TMPID.map"
 
@@ -72,7 +72,7 @@
   echo '           margin-left:25px;'                                >> $HTML
   echo '           margin-bottom: 5px;}'                             >> $HTML
   echo 'form { padding:4px 4px 4px 4px;}'                            >> $HTML
-  echo 'img { margin-top:50px; }'                                    >> $HTML
+  echo 'img { margin-top:50px;width:75% }'                           >> $HTML
   echo '.s { margin-left:30px;'                                      >> $HTML
   echo '     font-size:.7em;'                                        >> $HTML
   echo '     line-height:2em;}'                                      >> $HTML
@@ -83,18 +83,39 @@
   echo '.s  > a:hover { background-color:none;'                      >> $HTML
   echo '                color: #ff0000;}'                            >> $HTML
 
-  for COLOR in `echo $COLORSET | sed 's/;/\n/g'`
-   do COLORID=`echo $COLOR | base64 | sed 's/[^a-zA-Z]*//g'`
-      echo ".$COLORID {"                                             >> $HTML
-      echo "   color:#$COLOR;"                                       >> $HTML
-      echo "}"                                                       >> $HTML
-      echo ".$COLORID  > form > input,"                              >> $HTML
-      echo ".$COLORID > .s  > a {"                                   >> $HTML
-      echo "   background-color:#$COLOR;"                            >> $HTML
-      echo "}"                                                       >> $HTML
-  done
+  echo '.unset {color:#ff0000;}'                                     >> $HTML
+  echo '.unset  > form > input,'                                     >> $HTML
+  echo '.unset > .s  > a {background-color:#ff0000;}'                >> $HTML
+  echo '.isset {color:#00ff00;}'                                     >> $HTML
+  echo '.isset  > form > input,'                                     >> $HTML
+  echo '.isset > .s  > a {background-color:#00ff00;}'                >> $HTML
 
+
+ #for COLOR in `echo $COLORSET | sed 's/;/\n/g'`
+ # do COLORID=`echo $COLOR | base64 | sed 's/[^a-zA-Z]*//g'`
+ #    echo ".$COLORID {"                                             >> $HTML
+ #    echo "   color:#$COLOR;"                                       >> $HTML
+ #    echo "}"                                                       >> $HTML
+ #    echo ".$COLORID  > form > input,"                              >> $HTML
+ #    echo ".$COLORID > .s  > a {"                                   >> $HTML
+ #    echo "   background-color:#$COLOR;"                            >> $HTML
+ #    echo "}"                                                       >> $HTML
+ #done
+
+  echo '.highlight > a { background-color:#000000!important; }'      >> $HTML
   echo '</style>'                                                    >> $HTML
+
+
+  echo '<script src="https://code.jquery.com/jquery-1.10.2.js"></script>' >> $HTML
+ #echo '<script type="text/javascript">'                             >> $HTML
+ #echo '    function y(urlid) { // highlight url'                    >> $HTML
+ #echo '             $( "#" + urlid ).addClass("highlight");'        >> $HTML
+ #echo '    }'                                                       >> $HTML
+ #echo '    function n(urlid) { // highlight url'                    >> $HTML
+ #echo '             $( "#" + urlid ).removeClass("highlight");'     >> $HTML
+ #echo '    }'                                                       >> $HTML
+ #echo '</script>'                                                   >> $HTML
+
   echo '</head><body>'                                               >> $HTML
 
 # --------------------------------------------------------------------------- #
@@ -152,17 +173,21 @@
 
       for BARCODE in `echo $ZBAR          | #
                       sed 's/ //g'        | #
-                      sed 's/decoded/\n/g'` #
+                      sed 's/decoded/\n/g'| #
+                      sort -n -t '(' -k 2`  #
         do
             URL=`echo "$BARCODE"         | #
                  cut -d "(" -f 1         | #
                  sed 's/QRCODE//'`         #
+            SHORTURLCHECK=`echo "$SHORTURLBASE"         | #
+                           tr [:upper:] [:lower:]       | #
+                           sed 's/http[s]*/http.\\\\?/g'` #
 
-            if [ `echo $URL | grep -i "$SHORTURLBASE" | #
+            if [ `echo "$URL" | #
+                  grep -i "$SHORTURLCHECK"  | #
                   wc -l` -lt 1 ]
-            then
-                  echo "NOT A MATCHING SHORTURL"
-
+            then  MATCHSHORTURL="NO"
+            else  MATCHSHORTURL="YES"
             fi
 
              CHECK=`curl -sIL $URL          | #
@@ -188,26 +213,29 @@
                   sed 's/)(/,/g'            | #
                   sed 's/[()]//g'`            #  
 
-              COLOR=`echo $COLORSET          | #
-                     sed 's/;/\n/g'          | #
-                     head -n $CNT | tail -n 1`
-
-              COLORID=`echo $COLOR | base64 | sed 's/[^a-zA-Z]*//g'`
-
-              echo "<span class=\"$COLORID\">" >> $HTML
-
+             #COLOR=`echo $COLORSET          | #
+             #       sed 's/;/\n/g'          | #
+             #       head -n $CNT | tail -n 1`
+             #COLORID=`echo $COLOR | base64 | sed 's/[^a-zA-Z]*//g'`
+             #echo "<span class=\"$COLORID\">" >> $HTML
         
            # ----------------------------------------------------------------- #
              if [ $CHECK -gt 1 ]; then
   
+                 echo "<span class=\"isset\">"                       >> $HTML
+                 COLOR="00ff00";OPACITY="0.1"
+
                  echo "<span class=\"s\" id=\"$THISID\">"            >> $HTML
-                 echo "<a href=\"$URL\">$URL</a> "                   >> $HTML
-                 echo " already defined "                            >> $HTML
-                 echo "<a href=\"#$MAPID\">M</a><br/>"               >> $HTML
+                 echo "<a href=\"#$MAPID\">$URL</a> "                >> $HTML
+                #echo "<a href=\"$URL\">$URL</a> "                   >> $HTML
+                #echo " already defined "                            >> $HTML
+                #echo "<a href=\"#$MAPID\">M</a><br/>"               >> $HTML
                  echo "</span>"                                      >> $HTML
 
              else
-  
+                 echo "<span class=\"unset\">"                       >> $HTML
+                 COLOR="ff0000";OPACITY="0.3"
+
              if [ `echo $ALLURLS | grep $URL | wc -l` -gt 0 ];
               then
                   echo "<span class=\"s\">"                          >> $HTML
@@ -215,6 +243,9 @@
                   echo "$URLID $IMAGEID"                             >> $HTML
                   echo "</span>"                                     >> $HTML
                else
+
+                 if [ "$MATCHSHORTURL" == "YES" ];then
+
                   echo "<form action=\"$SHORTURLBASE/$YOURLSAPI\">"  >> $HTML
                 # echo "$URL needs to be defined"
                   echo "<input type=\"hidden\""                      >> $HTML
@@ -227,13 +258,19 @@
                   echo "name=\"url\" placeholder=\"url\">"           >> $HTML
                   echo "<input type=\"submit\" value=\"make link\">" >> $HTML
                   echo "</form>"                                     >> $HTML
+
+                 else
+                  echo "<span class=\"s\">"                          >> $HTML
+                  echo "<a href=\"#$MAPID\">$URL UNDEFINED</a> "     >> $HTML
+                  echo "</span>"                                     >> $HTML
+                 fi
   
                   echo "<span class=\"s\">"                          >> $HTML
                 # echo "$URLID $IMAGEID $URL"
                   echo "$URLID $IMAGEID XX"                          >> $HTML
                   echo "<br/></span>"                                >> $HTML
 
-                  #URL="#$THISID"
+                  URL="#$THISID"
               fi
              fi
              echo "<br/></span>"                                     >> $HTML
@@ -257,7 +294,8 @@
               do
                  VMARK=`echo $V | cut -d ":" -f 1`
                  VALUE=`echo $V | cut -d ":" -f 2`
-                  VNEW=`python -c "print $VALUE / $SCALEFACTOR"`
+                  VNEW=`python -c "print $VALUE / $SCALEFACTOR" | #
+                        cut -d "." -f 1`
                  XYNEW=`echo $XYNEW      | #
                         sed "s/$V/$VNEW/g"`
              done
@@ -273,10 +311,15 @@
                                  polygon $POLYGON\""
            # HTML MAP 
            # ----------------------------
+           # echo "<area shape=\"poly\" 
+           #        coords=\"$XYNEW\" href=\"$URL\" 
+           #        onmouseout=\"n('$THISID')\"
+           #        onmouseover=\"y('$THISID')\" 
+           #        id=\"$MAPID\">" | tr -s ' ' >> $MAPTMP
              echo "<area shape=\"poly\" 
-                     coords=\"$XYNEW\" 
-                     href=\"$URL\" 
-                     id=\"$MAPID\">" | tr -s ' ' >> $MAPTMP
+                    coords=\"$XYNEW\" href=\"$URL\" 
+                    data-tid=\"$THISID\" 
+                    class=\"map\">" | tr -s ' ' >> $MAPTMP
 
            CNT=`expr $CNT + 1`
       done
@@ -291,8 +334,25 @@
   
   done
  
-  cat $MAPTMP           >> $HTML
-  echo "</body></html>" >> $HTML
+  cat $MAPTMP                                                        >> $HTML
+  echo '<script type="text/javascript"'                              >> $HTML
+  echo 'src="../../lib/js/imageMapResizer.js"></script>'             >> $HTML
+  echo '<script type="text/javascript">imageMapResize();</script>'   >> $HTML
+  echo '<script type="text/javascript">'                             >> $HTML
+  echo '$(document).ready(function() {'                              >> $HTML
+  echo '        $( ".map" ).hover('                                  >> $HTML
+  echo '          function() { //over'                               >> $HTML
+  echo '            tid = $( this ).data("tid")'                     >> $HTML
+  echo '            $( "#" + tid ).addClass( "highlight" );'         >> $HTML
+  echo '          },'                                                >> $HTML
+  echo '          function() { //out'                                >> $HTML
+  echo '            tid = $( this ).data("tid")'                     >> $HTML
+  echo '            $( "#" + tid ).removeClass( "highlight" );'      >> $HTML
+  echo '          }'                                                 >> $HTML
+  echo '        );'                                                  >> $HTML
+  echo '});'                                                         >> $HTML
+  echo '</script>'                                                   >> $HTML
+  echo "</body></html>"                                              >> $HTML
 
 # --------------------------------------------------------------------------- #
 # FINALISE HTML
