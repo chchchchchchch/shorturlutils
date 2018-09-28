@@ -12,6 +12,7 @@
 
   PREVIEWSIZE="800";OPACITY="0.3"
   COLORSET="44aa00;ff0000;003380;ffcc00;55ddff;ad60f2;ff00cc;aaffcc"
+  CANVASPDF="../lib/pdf/canvas.pdf"
 
   TMPDIR="."
    TMPID="$TMPDIR/tmp"
@@ -44,7 +45,7 @@
   pdflatex -interaction=nonstopmode \
            -output-directory $TMPDIR \
             ${TMPID}.tex #  > /dev/null
-  pdftk ${TMPID}.pdf background canvas.pdf output ${TMPID}2.pdf
+  pdftk ${TMPID}.pdf background $CANVASPDF output ${TMPID}2.pdf
 
   convert ${TMPID}2.pdf ${OUTID}_%04d.png
 
