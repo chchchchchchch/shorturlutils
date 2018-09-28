@@ -1,3 +1,5 @@
 *.pdf
 *.html
 *.png
+
+lib/yourls.config
