@@ -15,19 +15,12 @@
 
   PREVIEWSIZE="800";OPACITY="0.3"
   CANVASPDF="../lib/pdf/canvas.pdf"
- #COLORSET="44aa00;ff0000;003380;ffcc00;55ddff;ad60f2;ff00cc;aaffcc;
- #          44aa00;ff0000;003380;ffcc00;55ddff;ad60f2;ff00cc;aaffcc;
- #          44aa00;ff0000;003380;ffcc00;55ddff;ad60f2;ff00cc;aaffcc;
- #          44aa00;ff0000;003380;ffcc00;55ddff;ad60f2;ff00cc;aaffcc;"
- #COLORSET=`echo $COLORSET | sed ":a;N;\$!ba;s/\n//g" | sed 's/ //g'`
- #COLORSET=`printf "$COLORSET%.0s" {1..100}`
-
-  MAPTMP="$TMPID.map"
 
   OUTID=`md5sum $PDF| cut -c 1-8`
   if [ ! -d "$OUTID" ];then mkdir $OUTID;fi
   OUTID="$OUTID/$OUTID"
    HTML="${OUTID}.html"
+  MAPTMP="$TMPID.map"
 
 # --------------------------------------------------------------------------- #
 # GENERATE TWO PAGED PREVIEW
@@ -64,58 +57,55 @@
 # --------------------------------------------------------------------------- #
 
   echo '<html><head>'                                                >  $HTML
+
   echo '<style>'                                                     >> $HTML
-  echo 'body { padding-bottom:10%;}'                                 >> $HTML
+
+  echo 'body { padding:0;margin:0;'                                  >> $HTML
+  echo '       padding-bottom:10%;'                                  >> $HTML
+  echo '       background-color:#fefefe; }'                          >> $HTML
   echo 'span,form{ font-size:12px;'                                  >> $HTML
   echo '           font-family:monospace;'                           >> $HTML
   echo '           line-height:1.5em;'                               >> $HTML
-  echo '           margin-left:25px;'                                >> $HTML
   echo '           margin-bottom: 5px;}'                             >> $HTML
-  echo 'form { padding:4px 4px 4px 4px;}'                            >> $HTML
-  echo 'img { margin-top:50px;width:75% }'                           >> $HTML
-  echo '.s { margin-left:30px;'                                      >> $HTML
+  echo 'form { font-size:20px; }'                                    >> $HTML
+  echo '.s { float:left;'                                            >> $HTML
+  echo '     white-space: nowrap;'                                   >> $HTML
   echo '     font-size:.7em;'                                        >> $HTML
-  echo '     line-height:2em;}'                                      >> $HTML
+  echo '     line-height:1.8em;'                                     >> $HTML
+  echo '     clear:both; }'                                          >> $HTML
   echo '.s  > a { text-decoration:none;'                             >> $HTML
   echo '          margin:-4px 4px -4px -4px;'                        >> $HTML
   echo '          padding: 4px 4px 4px 4px;'                         >> $HTML
-  echo '          color: #ffffff;}'                                  >> $HTML
+  echo '          color: #ffffff; }'                                 >> $HTML
   echo '.s  > a:hover { background-color:none;'                      >> $HTML
   echo '                color: #ff0000;}'                            >> $HTML
-
-  echo '.unset {color:#ff0000;}'                                     >> $HTML
   echo '.unset  > form > input,'                                     >> $HTML
-  echo '.unset > .s  > a {background-color:#ff0000;}'                >> $HTML
-  echo '.isset {color:#00ff00;}'                                     >> $HTML
+  echo '.unset > .s  > a { font-size:16px;'                          >> $HTML
+  echo '                   background-color:#ffffff; }'              >> $HTML
   echo '.isset  > form > input,'                                     >> $HTML
-  echo '.isset > .s  > a {background-color:#00ff00;}'                >> $HTML
-
-
- #for COLOR in `echo $COLORSET | sed 's/;/\n/g'`
- # do COLORID=`echo $COLOR | base64 | sed 's/[^a-zA-Z]*//g'`
- #    echo ".$COLORID {"                                             >> $HTML
- #    echo "   color:#$COLOR;"                                       >> $HTML
- #    echo "}"                                                       >> $HTML
- #    echo ".$COLORID  > form > input,"                              >> $HTML
- #    echo ".$COLORID > .s  > a {"                                   >> $HTML
- #    echo "   background-color:#$COLOR;"                            >> $HTML
- #    echo "}"                                                       >> $HTML
- #done
-
+  echo '.isset > .s  > a { background-color:#00ff00; }'              >> $HTML
+  echo 'img,div.isset,div.unset{ position:relative;'                 >> $HTML
+  echo '                         float:left;'                        >> $HTML
+  echo '                         margin:0;}'                         >> $HTML
+  echo 'img { width:75%;z-index:3; }'                                >> $HTML
+  echo 'div.isset,div.unset{ padding:2.5%; }'                        >> $HTML
+  echo 'div.isset { width:21%;height:200px;'                         >> $HTML
+  echo '            z-index:2;'                                      >> $HTML
+  echo '            background-color:transparent;'                   >> $HTML
+  echo '            margin-top:2%;margin-right:-1%;}'                >> $HTML
+  echo 'div.unset { float:right;width:70%;height:200px;'             >> $HTML
+  echo '            z-index:1;'                                      >> $HTML
+  echo '            background-color:#eeeeee;'                       >> $HTML
+  echo '            padding-left:30%;'                               >> $HTML
+  echo '            margin-bottom:15vw;margin-top:0%;'               >> $HTML
+  echo '            clear:both; }'                                   >> $HTML
+  echo '.lock,.lock > a { background-color:#ff0000!important; }'     >> $HTML
+  echo '.highlight,'                                                 >> $HTML
   echo '.highlight > a { background-color:#000000!important; }'      >> $HTML
+
   echo '</style>'                                                    >> $HTML
 
-
-  echo '<script src="https://code.jquery.com/jquery-1.10.2.js"></script>' >> $HTML
- #echo '<script type="text/javascript">'                             >> $HTML
- #echo '    function y(urlid) { // highlight url'                    >> $HTML
- #echo '             $( "#" + urlid ).addClass("highlight");'        >> $HTML
- #echo '    }'                                                       >> $HTML
- #echo '    function n(urlid) { // highlight url'                    >> $HTML
- #echo '             $( "#" + urlid ).removeClass("highlight");'     >> $HTML
- #echo '    }'                                                       >> $HTML
- #echo '</script>'                                                   >> $HTML
-
+  echo '<script src="../../lib/js/jquery-3.3.1.js"></script>'        >> $HTML
   echo '</head><body>'                                               >> $HTML
 
 # --------------------------------------------------------------------------- #
@@ -160,9 +150,6 @@
       PREVIEWMARKED=`echo $ANALYSETHIS | sed 's/\.png$//'`_marked.gif
       convert $ANALYSETHIS -resize $PREVIEWSIZE $PREVIEW
   
-      echo "<img src=\"`basename $PREVIEWMARKED`\" id=\"$IMAGEID\" 
-             usemap=\"#$MAPNAME\"><br/>" | tr -s ' '         >> $HTML
-
       if [ `echo $ZBAR | wc -c` -gt 1 ]; then
             echo "<map name=\"$MAPNAME\">"                   >> $MAPTMP
             MAP="YES"
@@ -212,69 +199,46 @@
                   cut -d "(" -f 2-          | #
                   sed 's/)(/,/g'            | #
                   sed 's/[()]//g'`            #  
-
-             #COLOR=`echo $COLORSET          | #
-             #       sed 's/;/\n/g'          | #
-             #       head -n $CNT | tail -n 1`
-             #COLORID=`echo $COLOR | base64 | sed 's/[^a-zA-Z]*//g'`
-             #echo "<span class=\"$COLORID\">" >> $HTML
         
-           # ----------------------------------------------------------------- #
-             if [ $CHECK -gt 1 ]; then
+    # ----------------------------------------------------------------------- #
+      if [ $CHECK -gt 1 ]; then
   
-                 echo "<span class=\"isset\">"                       >> $HTML
-                 COLOR="00ff00";OPACITY="0.1"
+           COLOR="00ff00";OPACITY="0.1"
+           echo "<span class=\"s\" id=\"$THISID\">"           >> $TMPID.isset
+           echo "<a href=\"$URL\">$URL</a> "                  >> $TMPID.isset
+           echo "</span>"                                     >> $TMPID.isset
 
-                 echo "<span class=\"s\" id=\"$THISID\">"            >> $HTML
-                 echo "<a href=\"#$MAPID\">$URL</a> "                >> $HTML
-                #echo "<a href=\"$URL\">$URL</a> "                   >> $HTML
-                #echo " already defined "                            >> $HTML
-                #echo "<a href=\"#$MAPID\">M</a><br/>"               >> $HTML
-                 echo "</span>"                                      >> $HTML
+      else
 
-             else
-                 echo "<span class=\"unset\">"                       >> $HTML
-                 COLOR="ff0000";OPACITY="0.3"
+          COLOR="ff0000";OPACITY="0.3"
 
-             if [ `echo $ALLURLS | grep $URL | wc -l` -gt 0 ];
-              then
-                  echo "<span class=\"s\">"                          >> $HTML
-                # echo "$URLID $IMAGEID $URL"
-                  echo "$URLID $IMAGEID"                             >> $HTML
-                  echo "</span>"                                     >> $HTML
-               else
+          if [ "$MATCHSHORTURL" == "YES" ];then
 
-                 if [ "$MATCHSHORTURL" == "YES" ];then
+         # echo "$URL needs to be defined"
+           echo "<form action=\"$SHORTURLBASE/$YOURLSAPI\">"  >> $TMPID.unset
+           echo "<input type=\"hidden\""                      >> $TMPID.unset
+           echo " name=\"signature\" value=\"$YOURLSSIG\">"   >> $TMPID.unset
+           echo "<input type=\"hidden\""                      >> $TMPID.unset
+           echo " name=\"action\" value=\"shorturl\">"        >> $TMPID.unset
+           echo "<input type=\"hidden\" name=\"keyword\""     >> $TMPID.unset
+           echo " value=\"$SHORTURL\">"                       >> $TMPID.unset
+           echo "<input type=\"text\" id=\"$THISID\""         >> $TMPID.unset
+           echo "name=\"url\" placeholder=\"url\">"           >> $TMPID.unset
+           echo "<input type=\"submit\" value=\"make link\">" >> $TMPID.unset
+           echo "</form>"                                     >> $TMPID.unset
 
-                  echo "<form action=\"$SHORTURLBASE/$YOURLSAPI\">"  >> $HTML
-                # echo "$URL needs to be defined"
-                  echo "<input type=\"hidden\""                      >> $HTML
-                  echo " name=\"signature\" value=\"$YOURLSSIG\">"   >> $HTML
-                  echo "<input type=\"hidden\""                      >> $HTML
-                  echo " name=\"action\" value=\"shorturl\">"        >> $HTML
-                  echo "<input type=\"hidden\" name=\"keyword\""     >> $HTML
-                  echo " value=\"$SHORTURL\">"                       >> $HTML
-                  echo "<input type=\"text\" id=\"$THISID\""         >> $HTML
-                  echo "name=\"url\" placeholder=\"url\">"           >> $HTML
-                  echo "<input type=\"submit\" value=\"make link\">" >> $HTML
-                  echo "</form>"                                     >> $HTML
+          else
 
-                 else
-                  echo "<span class=\"s\">"                          >> $HTML
-                  echo "<a href=\"#$MAPID\">$URL UNDEFINED</a> "     >> $HTML
-                  echo "</span>"                                     >> $HTML
-                 fi
+           echo "<span class=\"s\">"                          >> $TMPID.unset
+           echo "<a href=\"#$MAPID\">$URL UNDEFINED</a> "     >> $TMPID.unset
+           echo "</span>"                                     >> $TMPID.unset
+
+          fi
   
-                  echo "<span class=\"s\">"                          >> $HTML
-                # echo "$URLID $IMAGEID $URL"
-                  echo "$URLID $IMAGEID XX"                          >> $HTML
-                  echo "<br/></span>"                                >> $HTML
+          URL="#$THISID"
 
-                  URL="#$THISID"
-              fi
-             fi
-             echo "<br/></span>"                                     >> $HTML
-           # ----------------------------------------------------------------- #
+      fi
+    # ----------------------------------------------------------------------- #
 
              ALLURLS="$ALLURLS|$URL,$URLID,$IMAGEID"
   
@@ -311,13 +275,9 @@
                                  polygon $POLYGON\""
            # HTML MAP 
            # ----------------------------
-           # echo "<area shape=\"poly\" 
-           #        coords=\"$XYNEW\" href=\"$URL\" 
-           #        onmouseout=\"n('$THISID')\"
-           #        onmouseover=\"y('$THISID')\" 
-           #        id=\"$MAPID\">" | tr -s ' ' >> $MAPTMP
              echo "<area shape=\"poly\" 
-                    coords=\"$XYNEW\" href=\"$URL\" 
+                    coords=\"$XYNEW\" 
+                    href=\"javascript:void(0)\" 
                     data-tid=\"$THISID\" 
                     class=\"map\">" | tr -s ' ' >> $MAPTMP
 
@@ -331,66 +291,58 @@
      # ----------------------------------------------------------------- #
        DRAW=`echo $DRAW | sed ':a;N;$!ba;s/\n/ /g' | tr -s ' '`
        eval "convert $PREVIEW -strokewidth 10 $DRAW $PREVIEWMARKED"
-  
+
+     # ----------------------------------------------------------------- #
+       echo '<div class="isset urlinfo">'                       >> $HTML
+       if [ -f "$TMPID.isset" ];then 
+       cat $TMPID.isset                                         >> $HTML
+       rm $TMPID.isset;fi
+       echo '</div>'                                            >> $HTML
+     # ----------------------------------------------------------------- #
+       echo "<img src=\"`basename $PREVIEWMARKED`\" id=\"$IMAGEID\" 
+              usemap=\"#$MAPNAME\">" | tr -s ' '                >> $HTML
+     # ----------------------------------------------------------------- #
+       echo '<div class="unset urlinfo">'                       >> $HTML
+       if [ -f "$TMPID.unset" ];then 
+       cat $TMPID.unset                                         >> $HTML
+       rm $TMPID.unset;fi
+       echo '</div>'                                            >> $HTML
+     # ----------------------------------------------------------------- #
+
   done
  
   cat $MAPTMP                                                        >> $HTML
   echo '<script type="text/javascript"'                              >> $HTML
   echo 'src="../../lib/js/imageMapResizer.js"></script>'             >> $HTML
   echo '<script type="text/javascript">imageMapResize();</script>'   >> $HTML
+
   echo '<script type="text/javascript">'                             >> $HTML
   echo '$(document).ready(function() {'                              >> $HTML
   echo '        $( ".map" ).hover('                                  >> $HTML
-  echo '          function() { //over'                               >> $HTML
-  echo '            tid = $( this ).data("tid")'                     >> $HTML
+  echo '          function() { // OVER'                              >> $HTML
+  echo '            tid = $( this ).data("tid");'                    >> $HTML
   echo '            $( "#" + tid ).addClass( "highlight" );'         >> $HTML
   echo '          },'                                                >> $HTML
-  echo '          function() { //out'                                >> $HTML
-  echo '            tid = $( this ).data("tid")'                     >> $HTML
+  echo '          function() { // OUT'                               >> $HTML
+  echo '            tid = $( this ).data("tid");'                    >> $HTML
   echo '            $( "#" + tid ).removeClass( "highlight" );'      >> $HTML
   echo '          }'                                                 >> $HTML
   echo '        );'                                                  >> $HTML
+  echo '      $( ".map" ).click('                                    >> $HTML
+  echo '       function() {'                                         >> $HTML
+  echo '         $(".urlinfo").each(function() {'                    >> $HTML
+  echo '         $(this).children().removeClass("lock");'            >> $HTML
+  echo '         $(this).children().children().removeClass("lock");' >> $HTML
+  echo '        });'                                                 >> $HTML
+  echo '        tid = $( this ).data("tid");'                        >> $HTML
+  echo '        $( "#" + tid ).addClass( "lock" );'                  >> $HTML
+  echo '        $( "#" + tid ).removeClass( "highlight" );'          >> $HTML
+  echo '       }'                                                    >> $HTML
+  echo '      );'                                                    >> $HTML
   echo '});'                                                         >> $HTML
   echo '</script>'                                                   >> $HTML
+
   echo "</body></html>"                                              >> $HTML
-
-# --------------------------------------------------------------------------- #
-# FINALISE HTML
-# --------------------------------------------------------------------------- #
-  for URLID in `echo $ALLURLS   | #
-                sed "s,|,\n&,g" | #
-                tee`              #
-   do
-      URLID=`echo $URLID | cut -d "," -f 2`
-
-      for URLID in `grep $URLID $HTML | #
-                    sed 's/ /_/g'     | #
-                    uniq`
-       do
-           URLID=`echo $URLID | sed 's/_/ /g'`
-           IMGID=`echo $URLID | cut -d " " -f 2`
-           URLID=`echo $URLID | cut -d " " -f 1`
- 
-           WHERE=`echo $ALLURLS        | #
-                  sed "s,$URLID,\n&,g" | #
-                  cut -d "|" -f   1    | #
-                  grep ^$URLID         | #
-                  grep -v $IMGID       | #
-                  cut -d "," -f 2      | #
-                  sed 's/.*/<a href=\"#&\">O<\\\\\/a> /' | #
-                  sed ':a;N;$!ba;s/\n/ /g'` #
- 
-           if [ `echo $WHERE | wc -c` -gt 2 ]; then
-           sed -i "/$IMGID/s/$URLID/$WHERE/g" $HTML
-           sed -i "/$WHERE/s/$IMGID//g"       $HTML
-           fi
-      done
-  done
-
-  # REMOVE REMAINING URLIDS
-  sed -i "s/URL[0-9]*ID//g" $HTML
-  sed -i "/XX$/s/ [a-f0-9]\{16\} //g" $HTML
-  sed -i "s/XX//g" $HTML
 
 # --------------------------------------------------------------------------- #
 # CLEAN UP
